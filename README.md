@@ -143,8 +143,6 @@ Available MCPs:
 
   Plugins:
     • workiq  (plugin: work-iq)
-    • agile-studio  (plugin: cdh-dev-skills)
-    • khub-mcp  (plugin: cdh-dev-skills)
 
   Built-in:
     • github-mcp-server  (use -dibm to disable)
