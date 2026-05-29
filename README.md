@@ -4,10 +4,13 @@ A lightweight shell wrapper that launches GitHub Copilot CLI with **only the MCP
 
 ## Why?
 
-MCP tool definitions are injected into the prompt context on every turn — even if you never call them. Loading all MCP servers means thousands of tokens consumed before you even ask a question. This wrapper lets you pick only what you need per session.
+MCP tool definitions are injected into the prompt context on every turn — even if you never call them. Loading all MCP servers means thousands of tokens consumed before you even ask a question.
+
 For Example: 
 <img width="976" height="272" alt="10_25_56" src="https://github.com/user-attachments/assets/a048691a-e42a-42f8-91da-b5edffb3125e" />
 
+
+This wrapper lets you pick only what you need per session.
 
 ## Prerequisites
 
