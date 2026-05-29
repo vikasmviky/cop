@@ -98,7 +98,6 @@ You don't need to type the full MCP config key. The script matches by **substrin
 | `ms3` | ms365 |
 | `graf` | grafana-mcp |
 | `know` | knowledgehub |
-| `inf` | infinity-rules-mcp |
 | `open` | OpenAgile |
 | `work` | workiq (plugin) |
 | `khub` | khub-mcp (plugin) |
@@ -134,7 +133,6 @@ Available MCPs:
     • OpenAgile
     • ms365
     • webex-mcp
-    • infinity-rules-mcp
     • grafana-mcp
 
   Plugins:
