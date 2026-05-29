@@ -4,13 +4,7 @@ A lightweight shell wrapper that launches GitHub Copilot CLI with **only the MCP
 
 ## Why?
 
-MCP tool definitions are injected into the prompt context on every turn — even if you never call them. Loading all MCP servers means thousands of tokens consumed before you even ask a question.
-
-For Example: 
-<img width="976" height="272" alt="10_25_56" src="https://github.com/user-attachments/assets/a048691a-e42a-42f8-91da-b5edffb3125e" />
-
-
-This wrapper lets you pick only what you need per session.
+MCP tool definitions are injected into the prompt context on every turn — even if you never call them. Loading all MCP servers means thousands of tokens consumed before you even ask a question. This wrapper lets you pick only what you need per session.
 
 ## Prerequisites
 
@@ -104,6 +98,7 @@ You don't need to type the full MCP config key. The script matches by **substrin
 | `ms3` | ms365 |
 | `graf` | grafana-mcp |
 | `know` | knowledgehub |
+| `inf` | infinity-rules-mcp |
 | `open` | OpenAgile |
 | `work` | workiq (plugin) |
 | `khub` | khub-mcp (plugin) |
@@ -123,10 +118,14 @@ Full names also work: `cop -m webex-mcp,ms365`
 
 ## MCP Sources
 
-The script discovers MCPs from two locations:
+The script discovers MCPs from three locations:
 
 1. **Global config:** `~/.copilot/mcp-config.json`
 2. **Installed plugins:** `~/.copilot/installed-plugins/**/.mcp.json`
+3. **Project-level** (from current directory where `cop` is invoked):
+   - `.mcp.json`
+   - `.github/mcp.json`
+   - `.github/mcp.local.json`
 
 Run `cop -listmcps` to see all discovered MCPs:
 
@@ -139,10 +138,16 @@ Available MCPs:
     • OpenAgile
     • ms365
     • webex-mcp
+    • infinity-rules-mcp
     • grafana-mcp
 
   Plugins:
     • workiq  (plugin: work-iq)
+    • agile-studio  (plugin: cdh-dev-skills)
+    • khub-mcp  (plugin: cdh-dev-skills)
+
+  Project (/path/to/your/project):
+    • my-project-mcp  (.mcp.json)
 
   Built-in:
     • github-mcp-server  (use -dibm to disable)
@@ -150,7 +155,7 @@ Available MCPs:
 
 ## How It Works
 
-1. Reads `~/.copilot/mcp-config.json` and `~/.copilot/installed-plugins/**/.mcp.json` to discover all configured MCP servers
+1. Reads `~/.copilot/mcp-config.json`, `~/.copilot/installed-plugins/**/.mcp.json`, and project-level configs (`.mcp.json`, `.github/mcp.json`, `.github/mcp.local.json`) to discover all configured MCP servers
 2. Fuzzy-matches your `-m` input against server names
 3. Disables all non-matching servers via `--disable-mcp-server` flags
 4. Passes matching server configs inline via `--additional-mcp-config` JSON
@@ -159,7 +164,7 @@ Available MCPs:
 
 ## Configuration
 
-The script reads from two standard Copilot locations:
+The script reads from three standard Copilot locations:
 
 **Global MCP config:**
 ```
@@ -169,6 +174,13 @@ The script reads from two standard Copilot locations:
 **Plugin MCP configs (auto-discovered):**
 ```
 ~/.copilot/installed-plugins/<plugin-name>/<name>/.mcp.json
+```
+
+**Project-level configs (from current directory):**
+```
+.mcp.json
+.github/mcp.json
+.github/mcp.local.json
 ```
 
 Example `mcp-config.json` structure:

@@ -4,6 +4,7 @@
 # Add to shell: alias cop='/path/to/cop.sh'
 
 MCP_CONFIG="$HOME/.copilot/mcp-config.json"
+PROJECT_MCP_FILES=(".mcp.json" ".github/mcp.json" ".github/mcp.local.json")
 
 # Parse arguments
 REQUESTED_MCPS=""
@@ -66,6 +67,21 @@ if plugin_mcps:
     for k, plugin in plugin_mcps.items():
         print(f'    • {k}  (plugin: {plugin})')
 
+# From project-level configs
+project_mcps = {}
+for f in ['.mcp.json', '.github/mcp.json', '.github/mcp.local.json']:
+    if os.path.isfile(f):
+        with open(f) as fh:
+            data = json.load(fh)
+        for k in data.get('mcpServers', {}).keys():
+            project_mcps[k] = f
+
+if project_mcps:
+    print('')
+    print(f'  Project ({os.getcwd()}):')
+    for k, src in project_mcps.items():
+        print(f'    • {k}  ({src})')
+
 print('')
 print('  Built-in:')
 print('    • github-mcp-server  (use -dibm to disable)')
@@ -96,6 +112,14 @@ for mcp_file in glob.glob(os.path.expanduser('~/.copilot/installed-plugins/**/.m
         data = json.load(f)
     for k in data.get('mcpServers', {}).keys():
         names.add(k)
+
+# From project-level configs
+for f in ['.mcp.json', '.github/mcp.json', '.github/mcp.local.json']:
+    if os.path.isfile(f):
+        with open(f) as fh:
+            data = json.load(fh)
+        for k in data.get('mcpServers', {}).keys():
+            names.add(k)
 
 print(' '.join(names))
 ")
@@ -132,8 +156,18 @@ for mcp_file in glob.glob(os.path.expanduser('~/.copilot/installed-plugins/**/.m
     for k, v in data.get('mcpServers', {}).items():
         plugin_servers[k] = v
 
-# All server keys (global config + plugins)
-all_keys = list(servers.keys()) + [k for k in plugin_servers if k not in servers]
+# Also collect from project-level configs
+project_servers = {}
+for f in ['.mcp.json', '.github/mcp.json', '.github/mcp.local.json']:
+    if os.path.isfile(f):
+        with open(f) as fh:
+            data = json.load(fh)
+        for k, v in data.get('mcpServers', {}).items():
+            if k not in servers and k not in plugin_servers:
+                project_servers[k] = v
+
+# All server keys (global config + plugins + project)
+all_keys = list(servers.keys()) + [k for k in plugin_servers if k not in servers] + [k for k in project_servers if k not in servers and k not in plugin_servers]
 
 # Fuzzy match: find config key that contains the query (case-insensitive)
 def find_match(query):
@@ -158,11 +192,13 @@ for raw in requested_raw:
     matches = find_match(raw)
     if len(matches) == 1:
         match = matches[0]
-        # Get config from global or plugin
+        # Get config from global, plugin, or project
         if match in servers:
             resolved[match] = servers[match]
         elif match in plugin_servers:
             resolved[match] = plugin_servers[match]
+        elif match in project_servers:
+            resolved[match] = project_servers[match]
     elif len(matches) > 1:
         matched_str = ', '.join(matches)
         print(f'⚠️  \"{raw}\" matches multiple servers: {matched_str}', file=sys.stderr)

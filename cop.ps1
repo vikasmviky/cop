@@ -13,7 +13,7 @@ param(
 $McpConfig = Join-Path $env:USERPROFILE ".copilot\mcp-config.json"
 $PluginsDir = Join-Path $env:USERPROFILE ".copilot\installed-plugins"
 
-# Helper: Discover all MCPs from config + plugins
+# Helper: Discover all MCPs from config + plugins + project
 function Get-AllMcps {
     $allMcps = @{}
 
@@ -36,6 +36,21 @@ function Get-AllMcps {
                 foreach ($prop in $data.mcpServers.PSObject.Properties) {
                     if (-not $allMcps.ContainsKey($prop.Name)) {
                         $allMcps[$prop.Name] = @{ Source = "plugin:$pluginName"; Config = $prop.Value }
+                    }
+                }
+            }
+        }
+    }
+
+    # From project-level configs
+    $projectFiles = @(".mcp.json", ".github\mcp.json", ".github\mcp.local.json")
+    foreach ($pf in $projectFiles) {
+        if (Test-Path $pf) {
+            $data = Get-Content $pf -Raw | ConvertFrom-Json
+            if ($data.mcpServers) {
+                foreach ($prop in $data.mcpServers.PSObject.Properties) {
+                    if (-not $allMcps.ContainsKey($prop.Name)) {
+                        $allMcps[$prop.Name] = @{ Source = "project:$pf"; Config = $prop.Value }
                     }
                 }
             }
@@ -77,12 +92,22 @@ if ($listmcps) {
         }
     }
 
-    $plugins = $allMcps.GetEnumerator() | Where-Object { $_.Value.Source -ne "global" }
+    $plugins = $allMcps.GetEnumerator() | Where-Object { $_.Value.Source -like "plugin:*" }
     if ($plugins) {
         Write-Host ""
         Write-Host "  Plugins:" -ForegroundColor White
         foreach ($entry in $plugins) {
             Write-Host "    * $($entry.Key)  ($($entry.Value.Source))" -ForegroundColor Gray
+        }
+    }
+
+    $project = $allMcps.GetEnumerator() | Where-Object { $_.Value.Source -like "project:*" }
+    if ($project) {
+        Write-Host ""
+        Write-Host "  Project ($(Get-Location)):" -ForegroundColor White
+        foreach ($entry in $project) {
+            $src = $entry.Value.Source -replace "^project:", ""
+            Write-Host "    * $($entry.Key)  ($src)" -ForegroundColor Gray
         }
     }
 
